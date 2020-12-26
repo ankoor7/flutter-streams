@@ -15,16 +15,19 @@ class ProductivityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Flexible(
+        fit: FlexFit.loose,
+        child: Container(
         padding: const EdgeInsets.all(5),
         child: MaterialButton(
           child: Text(
             text,
             style: const TextStyle(color: Colors.white),
           ),
+
           onPressed: onPressed,
           color: color,
           minWidth: size,
-        ));
+        )));
   }
 }
