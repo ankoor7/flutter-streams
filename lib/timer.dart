@@ -1,26 +1,34 @@
 import 'dart:async';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:work_timer/settings.dart';
 import 'package:work_timer/timerModel.dart';
 
 class CountDownTimer {
+  CountDownTimer() {
+    readSettings();
+  }
+
   double _percentRemaining = 1;
   bool _isActive = true;
   Timer timer;
   Duration _time;
   Duration _fulltime;
   TimerModel currentTimeModel;
-  int work = 45;
-  int shortBreak = 5;
-  int longBreak = 20;
+  int work;
+  int shortBreak;
+  int longBreak;
 
-  void startWork() {
+  Future<void> startWork() async {
+    await readSettings();
     _percentRemaining = 100;
     _time = Duration(minutes: work, seconds: 0);
     _fulltime = _time;
     startTimer();
   }
 
-  void startBreak(bool isShort) {
+  Future<void> startBreak(bool isShort) async {
+    await readSettings();
     _percentRemaining = 100;
     _time = Duration(minutes: isShort ? shortBreak : longBreak, seconds: 0);
     _fulltime = _time;
@@ -35,6 +43,24 @@ class CountDownTimer {
 
   void stopTimer() {
     _isActive = false;
+  }
+
+  Future<void> readSettings() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (!prefs.containsKey(WORKTIME)) {
+      prefs.setInt(WORKTIME, defaultTimes[WORKTIME]);
+    }
+    if (!prefs.containsKey(SHORTBREAK)) {
+      prefs.setInt(SHORTBREAK, defaultTimes[SHORTBREAK]);
+    }
+    if (!prefs.containsKey(LONGBREAK)) {
+      prefs.setInt(LONGBREAK, defaultTimes[LONGBREAK]);
+    }
+
+    work = prefs.getInt(WORKTIME);
+    shortBreak = prefs.getInt(SHORTBREAK);
+    longBreak = prefs.getInt(LONGBREAK);
   }
 
   String formatRemainingTime() => "${_time.inMinutes}:${_time.inSeconds.remainder(60).toString().padLeft(2, '0')}";

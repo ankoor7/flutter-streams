@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:work_timer/settings.dart';
 import 'package:work_timer/timer.dart';
 import 'package:work_timer/widgets.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -17,14 +17,24 @@ class AppBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Work Timer',
-      home: AppScaffold(),
+      home: TimerScreen(),
       theme: themeData,
     );
   }
 }
 
-class AppScaffold extends StatelessWidget {
-  CountDownTimer countDownTimer = CountDownTimer();
+// This is the type used by the popup menu.
+enum screens { settings, timer }
+
+void gotoSettings(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute<Widget>(builder: (BuildContext context) => SettingsScreen()),
+  );
+}
+
+class TimerScreen extends StatelessWidget {
+  final CountDownTimer countDownTimer = CountDownTimer();
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +45,22 @@ class AppScaffold extends StatelessWidget {
           color: Colors.teal,
           text: 'Work',
           onPressed: countDownTimer.startWork,
-          size: 150,
+          size: buttonSize,
         ),
         ProductivityButton(
           color: Colors.lightBlue[600],
           text: 'Short Break',
           onPressed: () => countDownTimer.startBreak(true),
-          size: 150,
+          size: buttonSize,
         ),
         ProductivityButton(
           color: Colors.lightBlue[900],
           text: 'Long Break',
           onPressed: () => countDownTimer.startBreak(false),
-          size: 150,
+          size: buttonSize,
         ),
       ],
     );
-
     final Row actionButtons = Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -59,13 +68,13 @@ class AppScaffold extends StatelessWidget {
           color: Colors.black87,
           text: 'Stop',
           onPressed: countDownTimer.stopTimer,
-          size: 150,
+          size: buttonSize,
         ),
         ProductivityButton(
           color: Colors.teal,
           text: 'Restart',
           onPressed: countDownTimer.startTimer,
-          size: 150,
+          size: buttonSize,
         )
       ],
     );
@@ -74,40 +83,56 @@ class AppScaffold extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My Work Timer'),
       ),
+      floatingActionButton: PopupMenuButton<screens>(
+        onSelected: (screens result) {
+          if (result == screens.settings) {
+            gotoSettings(context);
+          }
+        },
+        itemBuilder: (BuildContext context) =>
+        <PopupMenuEntry<screens>>[
+          const PopupMenuItem<screens>(
+            value: screens.settings,
+            child: Text('Settings'),
+          ),
+        ],
+      ),
       body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints viewportConstraints) {
-        return SingleChildScrollView(
-            child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: viewportConstraints.maxHeight,
-          ),
-          child: IntrinsicHeight(
-            child: Column(children: [
-              presets,
-              StreamBuilder<TimerModel>(
-                initialData: TimerModel('00:00', 1),
-                stream: countDownTimer.stream(),
-                builder:
-                    (BuildContext context, AsyncSnapshot<TimerModel> snapshot) {
-                  final TimerModel timer = snapshot.data ?? TimerModel('00:00', 1);
-                  return Expanded(
-                    child: CircularPercentIndicator(
-                      radius: min(viewportConstraints.maxWidth,
-                              viewportConstraints.maxHeight) /
-                          2,
-                      lineWidth: 10,
-                      percent: timer.percent,
-                      center: Text(timer.time),
-                      progressColor: Colors.teal,
-                    ),
-                  );
-                },
-              ),
-              actionButtons,
-            ]),
-          ),
-        ));
-      }),
+            return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: viewportConstraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(children: [
+                      presets,
+                      StreamBuilder<TimerModel>(
+                        initialData: TimerModel('00:00', 1),
+                        stream: countDownTimer.stream(),
+                        builder:
+                            (BuildContext context, AsyncSnapshot<
+                            TimerModel> snapshot) {
+                          final TimerModel timer = snapshot.data ?? TimerModel(
+                              '00:00', 1);
+                          return Expanded(
+                            child: CircularPercentIndicator(
+                              radius: min(viewportConstraints.maxWidth,
+                                  viewportConstraints.maxHeight) /
+                                  2,
+                              lineWidth: 10,
+                              percent: timer.percent,
+                              center: Text(timer.time),
+                              progressColor: Colors.teal,
+                            ),
+                          );
+                        },
+                      ),
+                      actionButtons,
+                    ]),
+                  ),
+                ));
+          }),
     );
   }
 }
@@ -116,17 +141,19 @@ ThemeData themeData = ThemeData(
   primarySwatch: Colors.blueGrey,
 );
 
+double buttonSize = 150;
+
 void noop() {}
 
 LayoutBuilder flexBody = LayoutBuilder(
     builder: (BuildContext context, BoxConstraints viewportConstraints) {
-  return SingleChildScrollView(
-      child: ConstrainedBox(
-    constraints: BoxConstraints(
-      minHeight: viewportConstraints.maxHeight,
-    ),
-    child: const IntrinsicHeight(
-      child: Text('Hello World'),
-    ),
-  ));
-});
+      return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: viewportConstraints.maxHeight,
+            ),
+            child: const IntrinsicHeight(
+              child: Text('Hello World'),
+            ),
+          ));
+    });
